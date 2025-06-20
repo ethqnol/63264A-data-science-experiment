@@ -12,63 +12,7 @@
         "to": 148,
         "total": 148
     },
-    "data": [
-        {
-            "id": 58429,
-            "sku": "RE-V5RC-24-8429",
-            "name": "Saudi Games, VEX V5 Robotics Competition High Stakes: Youth Division, Saudi Games",
-            "start": "2024-10-16T00:00:00-04:00",
-            "end": "2024-10-17T00:00:00-04:00",
-            "season": {
-                "id": 190,
-                "name": "VEX V5 Robotics Competition 2024-2025: High Stakes",
-                "code": null
-            },
-            "program": {
-                "id": 1,
-                "name": "VEX V5 Robotics Competition",
-                "code": "V5RC"
-            },
-            "location": {
-                "venue": "RIYADH BLVD",
-                "address_1": "2609 \u0627\u0644\u062d\u0648\u064a",
-                "address_2": null,
-                "city": "Riyadh",
-                "region": null,
-                "postcode": "13516",
-                "country": "Saudi Arabia",
-                "coordinates": {
-                    "lat": 24.772017,
-                    "lon": 46.601895
-                }
-            },
-            "locations": {
-                "2024-10-16": {
-                    "venue": "RIYADH BLVD",
-                    "address_1": "2609 \u0627\u0644\u062d\u0648\u064a",
-                    "address_2": null,
-                    "city": "Riyadh",
-                    "region": null,
-                    "postcode": "13516",
-                    "country": "Saudi Arabia",
-                    "coordinates": {
-                        "lat": 24.772017,
-                        "lon": 46.601895
-                    }
-                }
-            },
-            "divisions": [
-                {
-                    "id": 1,
-                    "name": "Division 1",
-                    "order": 1
-                }
-            ],
-            "level": "Regional",
-            "ongoing": false,
-            "awards_finalized": true,
-            "event_type": null
-        },
+    "data": [ 
         {
             "id": 56619,
             "sku": "RE-V5RC-24-6619",
