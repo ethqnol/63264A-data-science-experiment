@@ -74,8 +74,6 @@ while page <= total_pages:
 
     except requests.exceptions.RequestException as e:
         print(f"Error fetching events page {page}: {e}")
-        print(f"  Response Status Code: {response.status_code if 'response' in locals() else 'N/A'}")
-        print(f"  Response Text: {response.text if 'response' in locals() else 'N/A'}")
         break 
     except Exception as e:
         print(f"An unexpected error occurred processing events page {page}: {e}")
@@ -93,7 +91,7 @@ import json
 filename = "data.json"
 
 with open(filename, 'w') as file:
-    json.dump(data, file, indent=4)
+    json.dump(all_state_events, file, indent=4)
 
 
 print("\n--- Fetching Teams from each Event ---")
@@ -180,12 +178,7 @@ for event in all_state_events:
 
 
         except requests.exceptions.RequestException as e:
-            status_code = str(team_response.status_code) if 'team_response' in locals() else 'N/A'
             print(f"Error fetching teams page {team_page} for event {event_id}: {e}")
-            print(f"  Response Status Code: {team_response.status_code if 'team_response' in locals() else 'N/A'}")
-            print(f"  Response Text: {team_response.text if 'team_response' in locals() else 'N/A'}")
-
-
             break # Stop fetching teams for this event on error
         except Exception as e:
             print(f"An unexpected error occurred processing teams page {team_page} for event {event_id}: {e}")

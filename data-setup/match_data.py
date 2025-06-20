@@ -1,4 +1,5 @@
-from types import CodeType
+import random
+import time
 from robotevents_cheeser import generate_header
 from enum import Enum
 import requests 
@@ -44,10 +45,12 @@ class RobotEvents:
     
     def select_key(self):
         self.api_key_num = (self.api_key_num + 1) % self.num_of_keys
+        print(self.api_key_num)
         return self.api_keys[self.api_key_num]
     
     def generate_header(self):
-        return generate_header(self.select_key())
+        key = self.select_key()
+        return generate_header(key)
         
     def request(self, url, endpoint, params=None):
         url = f"{url}/{endpoint}"
@@ -69,8 +72,10 @@ class RobotEvents:
             if data["data"]:
                 return (ReturnCode.success, data)
             else: 
+                print(response.json()) 
                 return (ReturnCode.invalid_data, None)
-        else: 
+        else:
+            print(response.json()) 
             return (ReturnCode.failure, None)
         
     def request_all_pages(self, url, endpoint, params):
@@ -80,6 +85,7 @@ class RobotEvents:
         params["per_page"] = self.per_page
         while page <= total_pages:
             params["page"] = page
+            time.sleep(random.randint(3,6))
             req = self.request(url, endpoint, params)
             page += 1
             (code, data) = req
@@ -130,13 +136,16 @@ class MatchInfo:
     def _get_team_stats(self, team_id: str):
         team_number = str(team_id)
         try:
-            stats = self.team_stats_df.loc[self.team_stats_df["number"] == team_number]
+            stats = (self.team_stats_df.loc[self.team_stats_df["number"] == team_number])
+            if (stats.empty): 
+                return None
+            stats = stats.iloc[0]
             return {
-                "comps_attended": stats.get("comps_attended", None),
-                "trueskill": stats.get("trueskill", None),
-                "opr": stats.get("opr", None),
-                "dpr": stats.get("dpr", None),
-                "wp_per_match": stats.get("wp_per_match", None)
+                "comps_attended": float(stats.get("comps_attended", None)),
+                "trueskill": float(stats.get("trueskill", None)),
+                "opr": float(stats.get("opr", None)),
+                "dpr": float(stats.get("dpr", None)),
+                "wp_per_match": float(stats.get("wp_per_match", None))
             }
         except KeyError:
             return None
@@ -164,7 +173,6 @@ class MatchInfo:
         
         final_dict["red_score"] = self.red_score
         final_dict["blue_score"] = self.blue_score
-        
         return final_dict
 
     
@@ -179,7 +187,7 @@ for item in data:
     all_events.append(CompInfo(item["id"], item["divisions"]))
     
     
-match_info = []  
+match_info = pd.DataFrame()
 for event in all_events:
     for div in event.div_ids:
         (code, match_data) = robot_events.request_all_pages(robot_events.robot_events_url, f"events/{event.id}/divisions/{div}/matches", params = {"round[]": [2, 3, 6]})
@@ -202,9 +210,10 @@ for event in all_events:
                         blue_score=blue_alliance["score"]
                     )
                     final_info = info.generate_full()
-                    print(final_info)
-                    print("============================")
-                    if info != None:
-                        match_info.append(info)
-                
+                    if final_info != None:
+                        print(final_info)
+                        match_info = pd.concat([match_info, pd.DataFrame([final_info])], ignore_index=True)
+                        print("============================")
+                        
+match_info.to_csv("match_data.csv", index=False)
                 
