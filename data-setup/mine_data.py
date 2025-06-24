@@ -33,7 +33,7 @@ total_pages = 1
 while page <= total_pages:
     event_params = {
         "season": SEASON_ID,
-        "level": "State", 
+        "level[]": ["State", "Signature", "National", "Other"],
         "per_page": PER_PAGE,
         "page": page,
         "eventTypes": EVENT_TYPES

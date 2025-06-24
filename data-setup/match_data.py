@@ -145,6 +145,8 @@ class MatchInfo:
                 "trueskill": float(stats.get("trueskill", None)),
                 "opr": float(stats.get("opr", None)),
                 "dpr": float(stats.get("dpr", None)),
+                "awp_per_match": float(stats.get("awp_per_match", None)),
+                "ap_per_match": float(stats.get("awp_per_match", None)),
                 "wp_per_match": float(stats.get("wp_per_match", None))
             }
         except KeyError:
@@ -152,25 +154,29 @@ class MatchInfo:
 
     
     def generate_full(self):
+        keys = ["comps_attended", "trueskill", "opr", "dpr", "awp_per_match", "ap_per_match", "wp_per_match"]
+        
         red_1_stats = self._get_team_stats(self.red_1_id)
         red_2_stats = self._get_team_stats(self.red_2_id)
         blue_1_stats = self._get_team_stats(self.blue_1_id)
         blue_2_stats = self._get_team_stats(self.blue_2_id)
         
 
+        
         if red_1_stats is None or red_2_stats is None or blue_1_stats is None or blue_2_stats is None:
             return None
-
+            
+        teams = {
+            "red_1": red_1_stats,
+            "red_2": red_2_stats,
+            "blue_1": blue_1_stats,
+            "blue_2": blue_2_stats
+        }
         final_dict = {}
-        for key, value in red_1_stats.items():
-            final_dict[f"red_1_{key}"] = value
-        for key, value in red_2_stats.items():
-            final_dict[f"red_2_{key}"] = value
-        for key, value in blue_1_stats.items():
-            final_dict[f"blue_1_{key}"] = value
-        for key, value in blue_2_stats.items():
-            final_dict[f"blue_2_{key}"] = value
-        
+        for key in keys:
+            for team_name, stats in teams.items():
+                final_dict[f"{key}_{team_name}"] = stats[key]
+            
         final_dict["red_score"] = self.red_score
         final_dict["blue_score"] = self.blue_score
         return final_dict
@@ -190,7 +196,7 @@ for item in data:
 match_info = pd.DataFrame()
 for event in all_events:
     for div in event.div_ids:
-        (code, match_data) = robot_events.request_all_pages(robot_events.robot_events_url, f"events/{event.id}/divisions/{div}/matches", params = {"round[]": [2, 3, 6]})
+        (code, match_data) = robot_events.request_all_pages(robot_events.robot_events_url, f"events/{event.id}/divisions/{div}/matches", params = {"round[]": [2, 3, 4, 5, 6]})
         if code != ReturnCode.success:
             print("INVALID DATA; BREAKING EARLY")
             break;

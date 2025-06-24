@@ -1,0 +1,254 @@
+import random
+import time
+from robotevents_cheeser import generate_header
+from enum import Enum
+import requests 
+import json
+import os
+import pandas as pd
+
+with open('./data/data.json', 'r') as file:
+    data = json.load(file)["data"]
+    
+with open('./data/team.json', 'r') as file:
+    team_data = json.load(file)
+    
+team_stats = pd.read_csv('./data/team_data.csv')
+
+OUT_DIR = './data/match_info'
+if not os.path.exists(OUT_DIR):
+    os.makedirs(OUT_DIR)
+    
+
+class ReturnCode(Enum):
+   success = 0
+   failure = 1
+   invalid_data = 2
+
+
+
+
+class RobotEvents:
+    def __init__(self) -> None:
+        self.api_keys = [
+            "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiMzRjMTNlZGQyMGZhZjNmYmJkM2JkYmZlYWI3MWJiYmYwYTJjZjIwOTgxOGNmZThhMzAzMDY3MDI3ZDhmODUxMDVmMmY0M2Y5NjNmOWI1ZmMiLCJpYXQiOjE3NDQ0MDEzNzUuMjM5MDkyMSwibmJmIjoxNzQ0NDAxMzc1LjIzOTA5MzEsImV4cCI6MjY5MTA4NjE3NS4yMzM2ODEyLCJzdWIiOiIxMjE2MzciLCJzY29wZXMiOltdfQ.jLQ6h1yEhaZYnpSEWxDSDm25vKXMNgkdInXXGbb1EXf45fDAaOUWkp2ckx8nTjZR6qretav9xT6otkmv91HGpoMl5aGUyVlCq00kts0Y_utl8yFKkiVj0DRDFXWz6_g2atX5ZdDfs7GV4QTyFfuWkP36RzSNZxhLkqMT40m2dJ4q0uxmO5TBwAepa4LA1C0lxxiknxUYB0ayFAKapi9khRP6W6f_jBH4jpvkaUbrSj4ofNh0xYXOwNb9klaCdiZh_7Dl809IUbVak-VbGOUEaGI5IRZiNe2UIyekTGJMOrVINFTq-0HCmk7Exa0gV0nM8mC3tiUjyVf89kpxNXbbyDw0eoeq2ApbWktflOpJZ8dR25zmluaztEwpJ3skikUjGpmH_iJGr8V8w45psL3h0NOF07te8-5NSxlAtvD5Aiulrii24UUnszP8x7xKwzAUhqOcQwvJSgiTUsH5rCWR2f67OhtxWl59B_EEmyMfo7E399sMUBM5B8bIiYpHpp4GElQ-YJbC79j4DjwMIu-TXGo10xPw3ic88enFmkGdGBwMO7qiVFnnPhWuO_flqEKRgeoh3gw7fy65kmsR4cHoukJj2ps-r8yzcki2M8qdPC_zmKTCDRrrAGDNKeC7aqoZ3mWE1XDKYQgEt97s3URk66r2FQ1tpr9tnT1P6aWSRQQ",
+            
+            "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiZDAzMDkwNjg5MzcwNjNkY2UxYmY0ZGIxNGY5ZTRkZGQ1NTY1ODRiZDM2ZDhiN2JmNWYyNmE0NWUxZTlmYjRlNjEzZjExZDZkNTE4NjUyODYiLCJpYXQiOjE3NDkwNTM1ODcuNDczMTE0LCJuYmYiOjE3NDkwNTM1ODcuNDczMTE1LCJleHAiOjI2OTU3MzgzODcuNDY3NDM2OCwic3ViIjoiMTIwOTMzIiwic2NvcGVzIjpbXX0.StStXwbfo_e3VJE1G2AgNATtcXm2362DNyXfTBdaO_OBDl5C1OWc0z47c6pm5FaLNmqDbKTp8rKia5w7qrfdraiJiSQREeotzVdQovCXJH6IQBM3HHt84F4FuW38JV7T0wECv2ZRkuOgZO96SX2en-EMZeCyOoupco_J4ems7qLHBnJdBRRhv5h69yTFlxVzv1s99c7NW1dDoiVq3o9V6hz-JDe8_14X8aP5uuLWVWYLzs9B93ttzzvsRz9cieoSYEzecs7Y4kJmF5ZqI13JGn6fzFzlvujqJ7d5LCfEdM-XUlZsLJPhVI32pOMCmlhOrykz3pFRdHSi5EFJQNorfGGN1k43YL2ARWuxJQV4sZoeAmrzvojbkfpNgeKP94NUVHdIbWypIfl9KmPwgncbrCRBUnj0sxPUAcz2U1GWvFaiEsMALmVGLEOo1piGXbQtp5W4a4lAMPiym7lsANuMAuCr3pRd2MLeZVLnSWouUBs4PHkemklXAjPfhsRpVkaA3zYv5QjsE11wZjISTISvZgF1D8_UpeLkvCOcG9rVdqEyrmofnoiZUih_PoD2ea-7Xp4IscN6xh976Dv-D1eri5Bu7v5VO7ufGW5nmhQ4i9Mi1a-zj-ZyVL8d8t6pwS4hMyxv7Nc2rq2w3St1rZhpPoHsmLDgE1kZjERMi1uLWug"
+        ]
+        self.base_url = "https://vrc-data-analysis.com/v1"
+        self.robot_events_url = "https://www.robotevents.com/api/v2"
+        self.api_key_num = 0
+        self.num_of_keys = len(self.api_keys)
+        self.per_page = 250
+    
+    def select_key(self):
+        self.api_key_num = (self.api_key_num + 1) % self.num_of_keys
+        print(self.api_key_num)
+        return self.api_keys[self.api_key_num]
+    
+    def generate_header(self):
+        key = self.select_key()
+        return generate_header(key)
+        
+    def request(self, url, endpoint, params=None):
+        url = f"{url}/{endpoint}"
+        headers = self.generate_header()
+        response = requests.get(url, headers=headers, params=params)
+        try:
+            response.json()
+        except requests.exceptions.HTTPError as error:
+            print(error)
+        except requests.exceptions.ReadTimeout as error:
+            print(error)
+        except requests.exceptions.ConnectionError as error:
+            print(error)
+        except requests.exceptions.RequestException as error:
+            print(error)
+            
+        if response.ok:
+            data = response.json()
+            if data["data"]:
+                return (ReturnCode.success, data)
+            else: 
+                print(response.json()) 
+                return (ReturnCode.invalid_data, None)
+        else:
+            print(response.json()) 
+            return (ReturnCode.failure, None)
+        
+    def request_all_pages(self, url, endpoint, params):
+        all_data = []
+        page = 1
+        total_pages = 1
+        params["per_page"] = self.per_page
+        while page <= total_pages:
+            params["page"] = page
+            req = self.request(url, endpoint, params)
+            page += 1
+            (code, data) = req
+            if code == ReturnCode.success and data != None:
+                all_data.extend(data["data"])
+                total_pages = data["meta"]["last_page"]
+            else:
+                return (ReturnCode.failure, all_data)
+                
+        return (ReturnCode.success, all_data)
+
+
+class CompInfo:
+    def __init__(self, id: int, divisions: dict):
+        self.div_ids = []
+        self.id = id
+        
+        for div in divisions:
+            self.div_ids.append(div["id"])
+            
+    def __str__(self) -> str:
+        return f"[{self.id} - {self.div_ids}]"
+
+class MatchInfo:
+    def __init__(self, red_1_id, red_2_id, blue_1_id, blue_2_id, red_score, blue_score):
+        self.red_1_id = red_1_id
+        self.red_2_id = red_2_id
+        self.blue_1_id = blue_1_id
+        self.blue_2_id = blue_2_id
+        self.blue_score = blue_score
+        self.red_score = red_score
+    
+        self.team_lookup = team_data
+        self.team_stats_df = team_stats
+        self.vrc_api = "https://vrc-data-analysis.com/v1"
+        self.STATS_HEADERS = {
+            "accept-language": "en",
+            "user-agent": "Robotevents Fr Fr I am Grant Cox no cap"
+        }
+    def __str__(self):
+        red_1 = self.team_lookup.get(self.red_1_id, self.red_1_id)
+        red_2 = self.team_lookup.get(self.red_2_id, self.red_2_id)
+        blue_1 = self.team_lookup.get(self.blue_1_id, self.blue_1_id)
+        blue_2 = self.team_lookup.get(self.blue_2_id, self.blue_2_id)
+    
+        return (
+            f"Red Alliance: {red_1} & {red_2} (Score: {self.red_score})\n"
+            f"Blue Alliance: {blue_1} & {blue_2} (Score: {self.blue_score})"
+        )
+    
+    
+    def _get_team_stats(self, team_id: str):
+        team_number = str(team_id)
+        try:
+            stats = (self.team_stats_df.loc[self.team_stats_df["number"] == team_number])
+            
+            if (stats.empty):
+                return None 
+                #skip below for now until vrc stats api is available
+                data_analysis_response = requests.get(f"{self.vrc_api}/team/{team_number}", headers=self.STATS_HEADERS, timeout=20)
+                print(data_analysis_response)
+                data_analysis_response = data_analysis_response.json()
+                team_stats = {
+                    "trueskill": data_analysis_response["trueskill"] if "trueskill" in data else 0,
+                    "opr": data_analysis_response["opr"] if "opr" in data else 0,
+                    "dpr": data_analysis_response["dpr"] if "dpr" in data else 0,
+                    "ccwm": data_analysis_response["ccwm"] if "ccwm" in data else 0,
+                    "ap_per_match": data_analysis_response["ap_per_match"] if "ap_per_match" in data else 0,
+                    "awp_per_match": data_analysis_response["awp_per_match"] if "awp_per_match" in data else 0,
+                    "wp_per_match": data_analysis_response["wp_per_match"] if "wp_per_match" in data else 0,
+                    "drive_score": data_analysis_response["score_driver_max"] if "score_driver_max" in data else 0,
+                    "auto_score": data_analysis_response["score_auto_max"] if "score_auto_max" in data else 0
+                }
+                stats = pd.DataFrame(team_stats)
+            
+            stats = stats.iloc[0]
+            return {
+                "trueskill": float(stats.get("trueskill", None)),
+                "opr": float(stats.get("opr", None)),
+                "dpr": float(stats.get("dpr", None)),
+                "awp_per_match": float(stats.get("awp_per_match", None)),
+                "ap_per_match": float(stats.get("awp_per_match", None)),
+                "wp_per_match": float(stats.get("wp_per_match", None))
+            }
+        except KeyError:
+            return None
+
+    
+    def generate_full(self):
+        keys = ["trueskill", "opr", "dpr", "awp_per_match", "ap_per_match", "wp_per_match"]
+        
+        red_1_stats = self._get_team_stats(self.red_1_id)
+        red_2_stats = self._get_team_stats(self.red_2_id)
+        blue_1_stats = self._get_team_stats(self.blue_1_id)
+        blue_2_stats = self._get_team_stats(self.blue_2_id)
+        
+
+        
+        if red_1_stats is None or red_2_stats is None or blue_1_stats is None or blue_2_stats is None:
+            return None
+            
+        teams = {
+            "red_1": red_1_stats,
+            "red_2": red_2_stats,
+            "blue_1": blue_1_stats,
+            "blue_2": blue_2_stats
+        }
+        
+        final_dict = {}
+        for key in keys:
+            for team_name, stats in teams.items():
+                final_dict[f"{key}_{team_name}"] = stats[key]
+            
+        final_dict["red_score"] = self.red_score
+        final_dict["blue_score"] = self.blue_score
+        return final_dict
+
+    
+
+
+robot_events = RobotEvents()
+
+all_states_teams = []
+
+all_events: list[CompInfo] = []
+
+
+for team_key, value in team_data.items():
+    if value["country"] == "United States":
+        all_states_teams.append(team_key)
+        
+count = 0   
+visited_matches = set()
+match_info = pd.DataFrame()
+for team in all_states_teams:
+    count += 1
+    print(f">>>>>>>>>>>>>>>>>>>>\n\n\n\n\n\n\nProcessing {count}/{len(all_states_teams)} teams, Matches Found {match_info.shape[0]} \n\n\n\n\n\n\n>>>>>>>>>>>>>>>>>>>>")
+    time.sleep(2.8)
+    (code, match_data) = robot_events.request_all_pages(robot_events.robot_events_url, f"teams/{team}/matches", params = {"season[]": [190], "round[]": [2, 3, 4, 5, 6]})
+    if code != ReturnCode.success:
+        print("&&&&&&&&&&&&&&&&&&\n\n\n\n\n\n\nINVALID DATA; BREAKING EARLY\n\n\n\n\n\n\n&&&&&&&&&&&&&&&&&&")
+        break;
+    else:
+        for data in match_data:
+
+            alliances = data["alliances"]
+            red_alliance = next((a for a in alliances if a["color"] == "red"), None)
+            blue_alliance = next((a for a in alliances if a["color"] == "blue"), None)
+            
+            if red_alliance and blue_alliance:
+                info = MatchInfo(
+                    red_1_id=red_alliance["teams"][0]["team"]["name"],
+                    red_2_id=red_alliance["teams"][1]["team"]["name"],
+                    blue_1_id=blue_alliance["teams"][0]["team"]["name"],
+                    blue_2_id=blue_alliance["teams"][1]["team"]["name"],
+                    red_score=red_alliance["score"],
+                    blue_score=blue_alliance["score"]
+                )
+                final_id = str(info.red_1_id) + str(info.red_2_id) + str(info.blue_1_id) + str(info.blue_2_id)
+                final_info = info.generate_full()
+                if final_id not in visited_matches and final_info != None:
+                    visited_matches.add(final_id)
+                    print(final_info)
+                    match_info = pd.concat([match_info, pd.DataFrame([final_info])], ignore_index=True)
+                    print("============================")
+       
+                        
+match_info.to_csv("match_data_alt.csv", index=False)
+                
