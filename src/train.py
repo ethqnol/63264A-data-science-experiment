@@ -3,13 +3,17 @@ import torch
 from torch import optim
 import numpy as np
 from model import MatchPredictor
+import pandas as pd
+
 
 model = MatchPredictor()
 
 model.train()
 
 
-dataset = np.loadtxt("match_data.csv", delimiter = ",", dtype=np.float32, skiprows = 1)
+
+
+dataset = np.loadtxt("swapped.csv", delimiter = ",", dtype=np.float32, skiprows = 1)
 np.random.shuffle(dataset)
 labels = dataset[:, -2:]
 data = dataset[:, :-2]
@@ -22,27 +26,26 @@ testing_data = torch.tensor(data[train_size : datalength], dtype=torch.float32)
 training_label = torch.tensor(labels[0:train_size], dtype=torch.float32)
 testing_label = torch.tensor(labels[train_size : datalength], dtype=torch.float32)
 
-batch_size = 10
-num_epoch = 6
+batch_size = 12
+num_epoch = 4
 num_batches = len(training_data) // batch_size
 
 lossfunction = nn.SmoothL1Loss()
-optimizer = optim.SGD(model.parameters(), lr = 0.01, weight_decay = 0.0005)
+optimizer = optim.AdamW(model.parameters(), lr = 0.01, weight_decay = 0.001)
 
 
 # returns tuple:
 # tuple.0 ==> whether the scores were within 10%
 # tuple.1 ==> whether the winner was correctly predicted
 def compare(result, label):
-    print(tuple(result.detach().numpy()))
     score_1_res, score_2_res = tuple(result.detach().numpy())
     score_1_actual, score_2_actual = tuple(label.detach().numpy())
     actual_winner = score_1_res > score_1_actual
     predicted_winner = score_1_res > score_2_res
-    print(f"{score_1_res}, {score_2_res} ==> {score_1_actual, score_2_actual}")
+    #print(f"{score_1_res}, {score_2_res} ==> {score_1_actual, score_2_actual}")
 
-    if (score_1_actual * 0.9 <= score_1_res <= score_1_actual * 1.1) and \
-       (score_2_actual * 0.9 <= score_2_res <= score_2_actual * 1.1):
+    if (score_1_actual - 5 <= score_1_res <= score_1_actual +5) and \
+       (score_2_actual - 5 <= score_2_res <= score_2_actual +5):
         if actual_winner == predicted_winner:
             return (True, True)
         else:

@@ -16,7 +16,7 @@ class LinearBlock(nn.Module): # this is the helper class for the linear layers
     def __init__(self, input, output):
         super(LinearBlock, self).__init__()
         self.fc = nn.Linear(input, output) # could add dropout
-        self.relu = nn.ReLU()
+        self.relu = nn.GELU()
 
     def forward(self, x):
         x = self.fc(x)
